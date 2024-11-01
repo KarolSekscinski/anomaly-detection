@@ -93,7 +93,23 @@ services:
     networks:
       - pipeline
 
-#  kedro-pipeline:
+  kedro-pipeline:
+    container_name: kedro-pipeline
+    build:
+      context: ./detect-anomalies
+      dockerfile: Dockerfile
+    environment:
+      KAFKA_TOPIC_NAME: stocks
+      KAFKA_SERVER: kafka-broker
+      KAFKA_PORT: "29092"
+    ports:
+      - "9001:9001"
+    depends_on:
+      kafka-broker-init:
+        condition: service_completed_successfully
+    networks:
+      - pipeline
+
 
 #  postgres-db-init:
 

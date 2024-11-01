@@ -1,0 +1,8 @@
+ipython>=8.10
+jupyterlab>=3.0
+kedro==0.19.9
+notebook
+kafka-python==2.0.2
+pandas==2.2.3
+
+

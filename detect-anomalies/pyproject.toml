@@ -1,0 +1,31 @@
+[build-system]
+requires = [ "setuptools",]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "detect_anomalies"
+readme = "README.md"
+dynamic = [ "dependencies", "version",]
+
+[project.scripts]
+detect-anomalies = "detect_anomalies.__main__:main"
+
+[tool.kedro]
+package_name = "detect_anomalies"
+project_name = "detect-anomalies"
+kedro_init_version = "0.19.9"
+tools = [ "None",]
+example_pipeline = "False"
+source_dir = "src"
+
+[project.entry-points."kedro.hooks"]
+
+[tool.setuptools.dynamic.dependencies]
+file = "requirements.txt"
+
+[tool.setuptools.dynamic.version]
+attr = "detect_anomalies.__version__"
+
+[tool.setuptools.packages.find]
+where = [ "src",]
+namespaces = false
