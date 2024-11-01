@@ -23,6 +23,11 @@ function Up-DockerCompose {
     }
 }
 
+function Build-Start-DockerCompose {
+    Build-DockerCompose
+    Up-DockerCompose
+}
+
 function Down-DockerCompose {
     Write-Host "Stopping Docker Compose services..." -ForegroundColor Cyan
     docker-compose -f $ComposeFile down
@@ -49,6 +54,7 @@ function Delete-All {
 
 # Display menu
 Write-Host "Choose an option:" -ForegroundColor Yellow
+Write-Host "0. Build and start DockerCompose"
 Write-Host "1. Build Docker Compose"
 Write-Host "2. Start (up) Docker Compose"
 Write-Host "3. Stop (down) Docker Compose"
@@ -56,9 +62,12 @@ Write-Host "4. Delete all containers, volumes, and networks"
 Write-Host "5. Remove all Docker resources (system prune)"
 
 # Read user input
-$choice = Read-Host "Enter your choice (1-5)"
+$choice = Read-Host "Enter your choice (0-5)"
 
 switch ($choice) {
+    0 {
+        Build-Start-DockerCompose
+    }
     1 {
         Build-DockerCompose
     }
