@@ -1,0 +1,124 @@
+version: '3.8'
+
+services:
+  data-producer:
+    container_name: data-producer
+    build:
+      context: ./producer
+      dockerfile: Dockerfile
+    environment:
+      KAFKA_TOPIC_NAME: stocks
+      KAFKA_SERVER: kafka-broker
+      KAFKA_PORT: "29092"
+    ports:
+      - "9001:9001"
+    depends_on:
+      kafka-broker-init:
+        condition: service_completed_successfully
+    networks:
+      - pipeline
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    hostname: zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    healthcheck:
+      test: [ 'CMD', 'bash', '-c', "echo 'ruok' | nc localhost 2181" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pipeline
+
+  kafka-broker-init:
+    image: confluentinc/cp-kafka:7.2.10
+    container_name: kafka-broker-init
+    depends_on:
+      - kafka-broker
+    entrypoint: [ '/bin/sh', '-c' ]
+    volumes:
+      - ./kafka/setup-kafka.sh:/setup-kafka.sh
+    networks:
+      - pipeline
+    command: "/setup-kafka.sh"
+
+  kafka-broker:
+    image: confluentinc/cp-kafka:7.2.10
+    hostname: kafka-broker
+    container_name: kafka-broker
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "9092:9092"
+      - "9101:9101"
+    healthcheck:
+      test: nc -z localhost 9092 || exit -1
+      start_period: 15s
+      interval: 5s
+      timeout: 10s
+      retries: 10
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_HOST_NAME: kafka-broker:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-broker:29092,PLAINTEXT_HOST://kafka-broker:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    networks:
+      - pipeline
+
+  kafdrop:
+    image: obsidiandynamics/kafdrop:4.0.0
+    container_name: kafdrop
+    restart: "no"
+    depends_on:
+      - kafka-broker
+      - zookeeper
+    ports:
+      - "9000:9000"
+    environment:
+      KAFKA_BROKERCONNECT: kafka-broker:29092
+    networks:
+      - pipeline
+
+#  kedro-pipeline:
+
+#  postgres-db-init:
+
+#  postgres-db:
+
+#  grafana:
+#    build:
+#      context: ./grafana
+#      dockerfile: Dockerfile
+#    container_name: grafana
+#    ports:
+#      - "3000:3000"
+#    restart: unless-stopped
+#    depends_on:
+#      - postgres-db
+#      - kedro-pipeline
+#    environment:
+#      - GF_INSTALL_PLUGINS=hadesarchitect-cassandra-datasource
+#      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/dashboard.json
+#      - GF_AUTH_ANONYMOUS_ENABLED=true
+#    #      - GF_SECURITY_ADMIN_USER=admin
+#    #      - GF_SECURITY_ADMIN_PASSWORD=admin
+#    networks:
+#      - pipeline
+
+networks:
+  pipeline:
+    driver: bridge

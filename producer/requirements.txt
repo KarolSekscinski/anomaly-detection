@@ -1,0 +1,5 @@
+zstandard
+tqdm==4.66.6
+pandas==2.2.3
+websocket-server==0.6.4
+kafka-python==2.0.2

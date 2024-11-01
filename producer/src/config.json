@@ -1,0 +1,18 @@
+{
+  "KAFKA_SERVER": {
+    "HOST": "kafka-broker",
+    "PORT": 29092
+  },
+  "TOPIC_NAME": "stocks",
+  "WEBSOCKET_SERVER": {
+    "HOST": "0.0.0.0",
+    "PORT":9001
+  },
+  "DATASET_PATHS": {
+    "GOOGLE": "nasdaq/google/*.zst",
+    "APPLE": "nasdaq/apple/*.zst",
+    "MICROSOFT": "nasdaq/microsoft/*.zst",
+    "NVIDIA": "nasdaq/nvidia/*.zst",
+    "TESLA": "nasdaq/tesla/*.zst"
+  }
+}
