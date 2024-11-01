@@ -22,6 +22,8 @@ ARG KEDRO_UID=999
 ARG KEDRO_GID=0
 COPY --chown=${KEDRO_UID}:${KEDRO_GID} . .
 
+ENV is_docker="true"
+
 EXPOSE 8888
 
 CMD ["kedro", "run"]

@@ -99,11 +99,10 @@ services:
       context: ./detect-anomalies
       dockerfile: Dockerfile
     environment:
-      KAFKA_TOPIC_NAME: stocks
       KAFKA_SERVER: kafka-broker
-      KAFKA_PORT: "29092"
+      KAFKA_PORT: "9092"
     ports:
-      - "9001:9001"
+      - "8888:8888"
     depends_on:
       kafka-broker-init:
         condition: service_completed_successfully

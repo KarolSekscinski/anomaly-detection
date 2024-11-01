@@ -1,6 +1,6 @@
 kafka_server:
   host: "kafka-broker"
-  port: 29092
+  port: 9092
 
 kafka_topics:
   input: "stocks"

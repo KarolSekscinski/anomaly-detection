@@ -1,9 +1,8 @@
-from websocket_server import WebsocketServer
-
 from utils.producer_functions import *
 import logging
 from tqdm import tqdm
 import pandas as pd
+from datetime import datetime
 
 
 class Producer:
@@ -26,6 +25,7 @@ class Producer:
         df = pd.read_csv(csv_file)
         for _, row in df.iterrows():
             trade = row.to_dict()
+            trade['producing_ts'] = str(datetime.now())
             json_data = json.dumps(trade)
             self.kafka_producer.send(topic_name, value=json_data)
 

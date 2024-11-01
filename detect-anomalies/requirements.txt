@@ -4,8 +4,7 @@ kedro==0.19.9
 notebook
 kafka-python==2.0.2
 pandas==2.2.3
-tensorflow==2.18.0
-tensorflow-intel==2.18.0
+# tensorflow==2.18.0
 jsonschema>=4.0.0
 pyyaml>=5.4.1
-
+scikit-learn==1.5.2
