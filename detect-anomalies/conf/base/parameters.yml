@@ -1,0 +1,26 @@
+kafka_server:
+  host: "kafka-broker"
+  port: 29092
+
+kafka_topics:
+  input: "stocks"
+  output: "anomalies"
+
+thresholds:
+  high_volume: 2000
+  low_volume: 100
+
+isolation_forest:
+  contamination: 0.01
+  n_estimators: 1000
+
+autoencoder_config:
+  encoding_dim: 16
+  epochs: 50
+  batch_size: 32
+  mse_threshold: 0.01
+
+svm_config:
+  kernel: "rbf"
+  gamma: "scale"
+  nu: 0.05

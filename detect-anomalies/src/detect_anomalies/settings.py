@@ -36,7 +36,6 @@ CONFIG_LOADER_ARGS = {
     #     "parameters": ["parameters*", "parameters*/**", "**/parameters*"],
     # }
 }
-# PIPELINE_REGISTRY = "detect_anomalies.src.pipeline_registry"
 
 
 # Class that manages Kedro's library components.

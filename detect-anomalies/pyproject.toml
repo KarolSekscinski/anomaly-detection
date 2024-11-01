@@ -29,3 +29,6 @@ attr = "detect_anomalies.__version__"
 [tool.setuptools.packages.find]
 where = [ "src",]
 namespaces = false
+
+[tool.kedro_telemetry]
+project_id = "f733b5f5dec8455882cb21e125dc2637"
