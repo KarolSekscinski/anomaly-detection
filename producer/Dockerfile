@@ -8,4 +8,4 @@ RUN pip install -r requirements.txt
 
 COPY src/ .
 
-CMD ["python", "Producer.py"]
+CMD ["python", "ProducerClass.py"]
