@@ -1,4 +1,4 @@
-FROM python:3.10-slim
+FROM python:3.11
 
 WORKDIR /app
 
@@ -8,4 +8,4 @@ RUN pip install -r requirements.txt
 
 COPY src/ .
 
-CMD ["python", "ProducerClass.py"]
+CMD ["python", "Producer.py"]

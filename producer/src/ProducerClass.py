@@ -1,38 +1,50 @@
+import websocket
 from utils.producer_functions import *
-import logging
-from tqdm import tqdm
-import pandas as pd
-from datetime import datetime
 
 
 class Producer:
     def __init__(self):
         self.config = load_config('config.json')
-        self.kafka_config = self.config["KAFKA_SERVER"]
-        self.kafka_producer = load_kafka_producer(self.kafka_config["HOST"],
-                                                  self.kafka_config["PORT"])
+        self.client = load_client(self.config['FINNHUB_API_TOKEN'])
+        self.kafka_producer = load_kafka_producer(self.config['KAFKA_SERVER'])
+        self.avro_schema = load_avro_schema('schemas/trades.avsc')
+        self.validate = self.config['FINNHUB_VALIDATE_TICKERS']
 
-    def run_server(self):
-        logging.info("Server started")
-        self.find_files_and_send_to_kafka()
+        websocket.enableTrace(True)
+        self.ws = websocket.WebSocketApp(f"wss://ws.finnhub.io?token={self.config['FINNHUB_API_TOKEN']}",
+                                         on_message=self.on_message,
+                                         on_error=self.on_error,
+                                         on_close=self.on_close)
+        self.ws.on_open = self.on_open
+        self.ws.run_forever()
 
-    def find_files_and_send_to_kafka(self):
-        files = find_files_matching_glob_pattern(self.config['DATASET_PATHS']['GOOGLE'])
-        for file_path in tqdm(files):
-            self.send_csv_files_to_kafka(file_path, self.config["TOPIC_NAME"])
+    def on_message(self, ws, message):
+        message = json.loads(message)
+        data = {
+            "data": message['data'],
+            "type": message['type']
+        }
+        avro_message = encode_avro_message(data, self.avro_schema)
+        self.kafka_producer.send(self.config['KAFKA_TOPIC'], avro_message)
 
-    def send_csv_files_to_kafka(self, csv_file: str, topic_name: str):
-        df = pd.read_csv(csv_file)
-        for _, row in df.iterrows():
-            trade = row.to_dict()
-            trade['producing_ts'] = str(datetime.now())
-            json_data = json.dumps(trade)
-            self.kafka_producer.send(topic_name, value=json_data)
+    def on_error(self, ws, error):
+        print(error)
 
-        self.kafka_producer.flush()
-        print(f"All rows from {csv_file} have been sent to {topic_name}")
+    def on_close(self, ws):
+        print("### closed ###")
+
+    def on_open(self, ws):
+        for ticker in self.config['FINNHUB_STOCKS_TICKERS']:
+            if self.validate == 1:
+                if ticker_validator(self.client, ticker):
+                    self.ws.send(f'{{"type":"subscribe","symbol":"{ticker}"}}')
+                    print(f"Subscribed to {ticker}, Success!")
+                else:
+                    print(f"Invalid ticker {ticker}")
+            else:
+                self.ws.send(f'{{"type":"subscribe","symbol":"{ticker}"}}')
+                print(f"Subscribed to {ticker}, but ticker is not valid")
 
 
 if __name__ == "__main__":
-    producer = Producer()
-    producer.run_server()
+    Producer()
