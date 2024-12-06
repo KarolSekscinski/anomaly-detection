@@ -1,5 +1,5 @@
 {
-  "namespace" : "Consumer",
+  "namespace" : "Producer",
   "type" : "record",
   "name" : "message",
   "fields": [ {
