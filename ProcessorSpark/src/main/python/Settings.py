@@ -1,4 +1,5 @@
 import configparser
+import ast
 
 
 class Settings:
@@ -60,4 +61,11 @@ class Settings:
 
         self.schemas = {
             "trades": self.config.get('schemas', 'trades')
+        }
+
+        self.anomalies = {
+            "window_sizes": ast.literal_eval(self.config.get('spark.window_size', 'sizes')),
+            "thresholds": ast.literal_eval(self.config.get('spark.thresholds', 'z-thresholds')),
+            "contamination_factors": ast.literal_eval(self.config.get('spark.contamination_factors',
+                                                                      'contamination_factors'))
         }

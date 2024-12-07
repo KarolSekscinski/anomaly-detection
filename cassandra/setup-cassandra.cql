@@ -20,13 +20,14 @@ CREATE INDEX IF NOT EXISTS ON stocks (uuid);
 
 CREATE TABLE anomalies(
     uuid uuid,
-    symbol text,
     price double,
     volume double,
-    anomaly_type text,
+    anomaly_source text,
+    window_size int,
+    threshold double,
+    trade_ts timestamp,
     ingestion_ts timestamp,
-    time_to_detect double,
     PRIMARY KEY ( (uuid), ingestion_ts )
 );
 
-CREATE INDEX IF NOT EXISTS ON anomalies (symbol);
+CREATE INDEX IF NOT EXISTS ON anomalies (anomaly_source);
