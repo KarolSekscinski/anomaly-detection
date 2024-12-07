@@ -13,12 +13,12 @@ from pyspark.sql.functions import udf
 class MainProcessor:
     @staticmethod
     def main():
-        def process_batch(batch_df, batch_id, func_name, **kwargs):
+        def process_batch(batch_df, _, func_name, **kwargs):
             """
             Process each batch using the specified anomaly detection function.
 
             :param batch_df: Spark DataFrame for the batch
-            :param batch_id: batch_id
+            :param _: batch_id
             :param func_name: Function to use for anomaly detection
             :param kwargs: Additional keyword arguments for the anomaly detection function
             """
@@ -103,33 +103,20 @@ class MainProcessor:
                           ) \
             .outputMode("update") \
             .start()
-
+        # 5 seconds
         anomalies_query_simple = final_df \
             .writeStream \
-            .trigger(processingTime=f"{setting_for_anomalies.window_sizes[0]} seconds") \
+            .trigger(processingTime=f"{setting_for_anomalies['window_sizes'][2]} seconds") \
             .foreachBatch(
                 lambda batch_df, batch_id: process_batch(
                     batch_df, batch_id, func_name=find_anomalies_using_z_threshold_rule,
                     threshold=setting_for_anomalies["thresholds"][4], column_name="price",
-                    window_size=setting_for_anomalies["window_sizes"][0]
+                    window_size=setting_for_anomalies["window_sizes"][2]
                 )
             ) \
             .outputMode("update") \
             .start()
 
-        # anomalies_query_isolation_forest = final_df \
-        #     .writeStream \
-        #     .trigger(processingTime="5 seconds") \
-        #     .foreachBatch(
-        #     lambda batch_df, batch_id: process_batch(
-        #         batch_df, batch_id, func_name=find_anomalies_using_z_threshold_rule,
-        #         threshold=setting_for_anomalies["thresholds"][4]
-        #     )
-        # ) \
-        #     .outputMode("update") \
-        #     .start()
-
-        # Let query await termination
         spark.streams.awaitAnyTermination()
 
 
