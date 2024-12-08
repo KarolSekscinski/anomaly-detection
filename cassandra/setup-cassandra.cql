@@ -20,6 +20,7 @@ CREATE INDEX IF NOT EXISTS ON stocks (uuid);
 
 CREATE TABLE anomalies(
     uuid uuid,
+    anomaly_uuid uuid,
     price double,
     volume double,
     anomaly_source text,

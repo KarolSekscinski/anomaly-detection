@@ -64,8 +64,9 @@ class Settings:
         }
 
         self.anomalies = {
-            "window_sizes": ast.literal_eval(self.config.get('spark.window_size', 'sizes')),
-            "thresholds": ast.literal_eval(self.config.get('spark.thresholds', 'z-thresholds')),
-            "contamination_factors": ast.literal_eval(self.config.get('spark.contamination_factors',
-                                                                      'contamination_factors'))
+            "window_sizes": ast.literal_eval(self.config.get('anomalies.window_size', 'sizes')),
+            "thresholds": ast.literal_eval(self.config.get('anomalies.thresholds', 'z-thresholds')),
+            "contamination_factors": ast.literal_eval(self.config.get('anomalies.contamination_factors',
+                                                                      'contamination_factors')),
+            "control_panel": ast.literal_eval(self.config.get('anomalies.controls', 'control_panel'))
         }

@@ -4,8 +4,7 @@ from pyspark.sql.types import *
 from pyspark.sql.avro.functions import from_avro
 from pyspark.sql.functions import current_timestamp
 from Settings import Settings
-from anomalies_functions import (find_anomalies_using_z_threshold_rule, find_anomalies_using_isolation_forest,
-                                 find_anomalies_using_one_class_svm)
+from anomalies_functions import find_anomalies
 import uuid
 from pyspark.sql.functions import udf
 
@@ -109,9 +108,24 @@ class MainProcessor:
             .trigger(processingTime=f"{setting_for_anomalies['window_sizes'][2]} seconds") \
             .foreachBatch(
                 lambda batch_df, batch_id: process_batch(
-                    batch_df, batch_id, func_name=find_anomalies_using_z_threshold_rule,
+                    batch_df, batch_id, func_name=find_anomalies,
+                    type_of_anomaly_to_find=setting_for_anomalies["control_panel"][0],
                     threshold=setting_for_anomalies["thresholds"][4], column_name="price",
                     window_size=setting_for_anomalies["window_sizes"][2]
+                )
+            ) \
+            .outputMode("update") \
+            .start()
+
+        anomalies_query_p_and_v = final_df \
+            .writeStream \
+            .trigger(processingTime=f"{setting_for_anomalies['window_sizes'][3]} seconds") \
+            .foreachBatch(
+                lambda batch_df, batch_id: process_batch(
+                    batch_df, batch_id, func_name=find_anomalies,
+                    type_of_anomaly_to_find=setting_for_anomalies["control_panel"][1],
+                    threshold=setting_for_anomalies["thresholds"][1], column_name="volume",
+                    window_size=setting_for_anomalies["window_sizes"][3]
                 )
             ) \
             .outputMode("update") \
