@@ -33,8 +33,6 @@
         <version>3.2.0</version>
     </dependency>
 
-
-
     <!-- https://mvnrepository.com/artifact/com.datastax.spark/spark-cassandra-connector -->
     <dependency>
         <groupId>com.datastax.spark</groupId>
@@ -42,14 +40,19 @@
         <version>3.2.0</version>
     </dependency>
 
-
-
     <!-- https://mvnrepository.com/artifact/com.datastax.oss/java-driver-core -->
     <dependency>
         <groupId>com.datastax.oss</groupId>
         <artifactId>java-driver-core</artifactId>
         <version>4.13.0</version>
     </dependency>
+
+    <!--https://repo.maven.apache.org/maven2/com/linkedin/isolation-forest/-->
+<!--    <dependency>-->
+<!--        <groupId>com.linkedin.isolation-forest</groupId>-->
+<!--        <artifactId>isolation-forest_3.2.0_2.11</artifactId>-->
+<!--        <version>3.0.2</version>-->
+<!--    </dependency>-->
 
 
   </dependencies>
