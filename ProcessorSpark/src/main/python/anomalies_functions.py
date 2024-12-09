@@ -3,14 +3,39 @@ from pyspark.sql.types import *
 import uuid
 from pyspark.sql import DataFrame
 from pyspark.sql.window import Window
-from mmlspark.isolationforest import IsolationForest
+
+
+def run_isolation_forest(features):
+    """
+    Run the Isolation Forest model from the JAR.
+    This could involve invoking the model directly using PySpark's JVM capabilities.
+    """
+    from pyspark import SparkContext
+    from py4j.java_gateway import java_import
+
+    sc = SparkContext.getOrCreate()
+
+    # Import your class from the JAR
+    java_import(sc._jvm, "IsolationForestWrapper")
+
+    # Initialize the Isolation Forest class
+    isolation_forest = sc._jvm.IsolationForestWrapper()
+    result = isolation_forest.detectAnomalies(features)  # Pass the feature vector
+
+    return result
+
+
+
 
 def find_anomalies(
     input_df: DataFrame, type_of_anomaly_to_find: int, threshold: float,
     column_name: str, window_size: int
 ) -> DataFrame:
     """
-
+    Custom function to find anomalies\n\t
+        1. z-score method: if (data points in batch - batch mean) / batch stddev is greater than threshold then data point is anomalous
+        2. peak and valleys method: if data point is peak / valley in batch then data point is anomalous
+        3. isolation forest method: if data point is classified as anomalous by isolation forest
     :param input_df:
     :param type_of_anomaly_to_find:
     :param threshold:
@@ -69,9 +94,17 @@ def find_anomalies(
             .withWatermark("trade_ts", f"{window_size} seconds") \
 
     elif type_of_anomaly_to_find == 3:
-        pass  # find using isolation forest
-    elif type_of_anomaly_to_find == 4:
-        pass  # find using one class svm
+        # Define UDF for Isolation Forest
+        isolation_forest_udf = udf(
+            lambda features: run_isolation_forest(features),
+            ArrayType(FloatType())  # Adjust return type based on your implementation
+        )
+
+        input_df = input_df.withColumn("isolation_forest_scores",
+                                       isolation_forest_udf(col(column_name))) \
+            .withColumn("is_anomaly", col("isolation_forest_scores")[1] > threshold) \
+            .filter(col("is_anomaly") == True)
+
 
     output_df = input_df \
         .withColumn("anomaly_uuid", make_uuid()) \

@@ -116,7 +116,7 @@ class MainProcessor:
             ) \
             .outputMode("update") \
             .start()
-
+        # 7 seconds
         anomalies_query_p_and_v = final_df \
             .writeStream \
             .trigger(processingTime=f"{setting_for_anomalies['window_sizes'][3]} seconds") \
@@ -130,6 +130,20 @@ class MainProcessor:
             ) \
             .outputMode("update") \
             .start()
+        # 7 seconds
+        # anomalies_query_isolation_forest = final_df \
+        #     .writeStream \
+        #     .trigger(processingTime=f"{setting_for_anomalies['window_sizes'][3]} seconds") \
+        #     .foreachBatch(
+        #     lambda batch_df, batch_id: process_batch(
+        #         batch_df, batch_id, func_name=find_anomalies,
+        #         type_of_anomaly_to_find=setting_for_anomalies["control_panel"][2],
+        #         threshold=setting_for_anomalies["thresholds"][1], column_name="price",
+        #         window_size=setting_for_anomalies["window_sizes"][3]
+        #         )
+        #     ) \
+        #     .outputMode("update") \
+        #     .start()
 
         spark.streams.awaitAnyTermination()
 
