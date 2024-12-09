@@ -1,11 +1,5 @@
 FROM bde2020/spark-python-template:3.2.0-hadoop3.2
 
-# Copy requirements.txt to the Docker image
-COPY requirements.txt .
-
-# Install Python dependencies
-RUN pip3 install -r ./requirements.txt
-
 # Download Spark packages
 COPY spark/target/dependency /spark/jars
 
