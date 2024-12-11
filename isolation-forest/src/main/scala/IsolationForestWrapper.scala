@@ -2,6 +2,7 @@ import org.apache.spark.sql.{DataFrame}
 import org.apache.spark.ml.feature.VectorAssembler
 import com.linkedin.relevance.isolationforest.IsolationForest
 
+// No longer trying to use this scala code, but it is here for reference
 object IsolationForestWrapper {
 
   /**

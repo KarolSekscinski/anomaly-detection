@@ -27,7 +27,7 @@ class MainProcessor:
             anomalies_df.write \
                 .format("org.apache.spark.sql.cassandra") \
                 .options(
-                    table=settings_for_spark.cassandra["tables"][0]["anomalies"],
+                    table=settings_for_spark.cassandra["tables"]["anomalies"],
                     keyspace=settings_for_spark.cassandra["keyspace"]
                 ) \
                 .mode("append") \
@@ -51,13 +51,11 @@ class MainProcessor:
                                            "org.apache.spark:spark-avro_2.12:3.2.0,"
                                            "com.datastax.oss:java-driver-core:4.13.0") \
             .getOrCreate()
+        print(dir(spark))
 
+        # Read Avro schema and Kafka stream
         json_format_schema = open(settings_for_spark.schemas["trades"], "r").read()
 
-        # This line creates UserDefinedFunction for generating UUIDs
-        make_uuid = udf(lambda: str(uuid.uuid4()), StringType())
-
-        # This line reads streams from Kafka broker and creates df with columns based on avro schema
         input_df = spark \
             .readStream \
             .format("kafka") \
@@ -73,10 +71,12 @@ class MainProcessor:
             .selectExpr("avroData.*")
         expanded_df.printSchema()
 
-        # Explode the nested data array
         exploded_df = expanded_df \
             .withColumn("trade", explode(col("data"))) \
             .select("trade.*", "type")
+
+        # Define UDFs
+        make_uuid = udf(lambda: str(uuid.uuid4()), StringType())
 
         # Rename columns to match their names in Cassandra db
         final_df = exploded_df \
@@ -95,55 +95,43 @@ class MainProcessor:
             .foreachBatch(lambda batch_df, batch_id:
                           batch_df.write
                           .format("org.apache.spark.sql.cassandra")
-                          .options(table=settings_for_spark.cassandra["tables"][0]["trades"],
+                          .options(table=settings_for_spark.cassandra["tables"]["trades"],
                                    keyspace=settings_for_spark.cassandra["keyspace"])
                           .mode("append")
                           .save()
                           ) \
             .outputMode("update") \
             .start()
-        # 5 seconds
-        anomalies_query_simple = final_df \
-            .writeStream \
-            .trigger(processingTime=f"{setting_for_anomalies['window_sizes'][2]} seconds") \
-            .foreachBatch(
-                lambda batch_df, batch_id: process_batch(
-                    batch_df, batch_id, func_name=find_anomalies,
-                    type_of_anomaly_to_find=setting_for_anomalies["control_panel"][0],
-                    threshold=setting_for_anomalies["thresholds"][4], column_name="price",
-                    window_size=setting_for_anomalies["window_sizes"][2]
-                )
-            ) \
-            .outputMode("update") \
-            .start()
-        # 7 seconds
-        anomalies_query_p_and_v = final_df \
-            .writeStream \
-            .trigger(processingTime=f"{setting_for_anomalies['window_sizes'][3]} seconds") \
-            .foreachBatch(
-                lambda batch_df, batch_id: process_batch(
-                    batch_df, batch_id, func_name=find_anomalies,
-                    type_of_anomaly_to_find=setting_for_anomalies["control_panel"][1],
-                    threshold=setting_for_anomalies["thresholds"][1], column_name="volume",
-                    window_size=setting_for_anomalies["window_sizes"][3]
-                )
-            ) \
-            .outputMode("update") \
-            .start()
-        # 7 seconds
-        # anomalies_query_isolation_forest = final_df \
-        #     .writeStream \
-        #     .trigger(processingTime=f"{setting_for_anomalies['window_sizes'][3]} seconds") \
-        #     .foreachBatch(
-        #     lambda batch_df, batch_id: process_batch(
-        #         batch_df, batch_id, func_name=find_anomalies,
-        #         type_of_anomaly_to_find=setting_for_anomalies["control_panel"][2],
-        #         threshold=setting_for_anomalies["thresholds"][1], column_name="price",
-        #         window_size=setting_for_anomalies["window_sizes"][3]
-        #         )
-        #     ) \
-        #     .outputMode("update") \
-        #     .start()
+
+        for window_size in setting_for_anomalies["window_sizes"]["prices"]:
+            anomalies_query_simple = final_df \
+                .writeStream \
+                .trigger(processingTime=f"{window_size} seconds") \
+                .foreachBatch(
+                    lambda batch_df, batch_id: process_batch(
+                        batch_df, batch_id, func_name=find_anomalies,
+                        price_to_find=True,
+                        threshold=setting_for_anomalies["thresholds"]["z-threshold"], column_name="price",
+                        window_size=window_size
+                    )
+                ) \
+                .outputMode("update") \
+                .start()
+
+        for window_size in setting_for_anomalies["window_sizes"]["volumes"]:
+            anomalies_query_p_and_v = final_df \
+                .writeStream \
+                .trigger(processingTime=f"{window_size} seconds") \
+                .foreachBatch(
+                    lambda batch_df, batch_id: process_batch(
+                        batch_df, batch_id, func_name=find_anomalies,
+                        price_to_find=False,
+                        threshold=setting_for_anomalies["thresholds"]["pv-threshold"], column_name="volume",
+                        window_size=window_size
+                    )
+                ) \
+                .outputMode("update") \
+                .start()
 
         spark.streams.awaitAnyTermination()
 

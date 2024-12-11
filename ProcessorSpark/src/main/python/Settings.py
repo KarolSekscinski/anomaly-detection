@@ -13,12 +13,11 @@ class Settings:
             "keyspace": self.config.get('cassandra', 'keyspace'),
             "username": self.config.get('cassandra', 'username'),
             "password": self.config.get('cassandra', 'password'),
-            "tables": [
-                {
-                    "trades": self.config.get('cassandra.tables', 'trades'),
-                    "anomalies": self.config.get('cassandra.tables', 'anomalies')
-                }
-            ]
+            "tables": {
+                "trades": self.config.get('cassandra.tables', 'trades'),
+                "anomalies": self.config.get('cassandra.tables', 'anomalies')
+            }
+
         }
 
         self.kafka = {
@@ -64,9 +63,15 @@ class Settings:
         }
 
         self.anomalies = {
-            "window_sizes": ast.literal_eval(self.config.get('anomalies.window_size', 'sizes')),
-            "thresholds": ast.literal_eval(self.config.get('anomalies.thresholds', 'z-thresholds')),
-            "contamination_factors": ast.literal_eval(self.config.get('anomalies.contamination_factors',
-                                                                      'contamination_factors')),
-            "control_panel": ast.literal_eval(self.config.get('anomalies.controls', 'control_panel'))
+            "window_sizes": {
+                "prices": ast.literal_eval(self.config.get('anomalies.window_size', 'prices')),
+                "volumes": ast.literal_eval(self.config.get('anomalies.window_size', 'volumes'))
+
+            },
+            "thresholds": {
+                "z-threshold": self.config.get('anomalies.thresholds', 'z-threshold'),
+                "pv-threshold": self.config.get('anomalies.thresholds', 'pv-threshold')
+            },
+            #"contamination_factors": ast.literal_eval(self.config.get('anomalies.contamination_factors',
+                                                                      # 'contamination_factors'))
         }

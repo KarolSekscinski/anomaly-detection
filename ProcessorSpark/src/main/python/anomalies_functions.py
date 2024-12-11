@@ -5,30 +5,8 @@ from pyspark.sql import DataFrame
 from pyspark.sql.window import Window
 
 
-def run_isolation_forest(features):
-    """
-    Run the Isolation Forest model from the JAR.
-    This could involve invoking the model directly using PySpark's JVM capabilities.
-    """
-    from pyspark import SparkContext
-    from py4j.java_gateway import java_import
-
-    sc = SparkContext.getOrCreate()
-
-    # Import your class from the JAR
-    java_import(sc._jvm, "IsolationForestWrapper")
-
-    # Initialize the Isolation Forest class
-    isolation_forest = sc._jvm.IsolationForestWrapper()
-    result = isolation_forest.detectAnomalies(features)  # Pass the feature vector
-
-    return result
-
-
-
-
 def find_anomalies(
-    input_df: DataFrame, type_of_anomaly_to_find: int, threshold: float,
+    input_df: DataFrame, price_to_find: bool, threshold: float,
     column_name: str, window_size: int
 ) -> DataFrame:
     """
@@ -36,19 +14,19 @@ def find_anomalies(
         1. z-score method: if (data points in batch - batch mean) / batch stddev is greater than threshold then data point is anomalous
         2. peak and valleys method: if data point is peak / valley in batch then data point is anomalous
         3. isolation forest method: if data point is classified as anomalous by isolation forest
+    :param price_to_find:
     :param input_df:
-    :param type_of_anomaly_to_find:
     :param threshold:
     :param column_name:
     :param window_size:
-    :return:
+    :return: DataFrame with only anomalies
     """
     # UDFs
     make_uuid = udf(lambda: str(uuid.uuid4()), StringType())
     source_udf = udf(lambda: str(f"{column_name} anomaly"), StringType())
     window_size_udf = udf(lambda: int(window_size), IntegerType())
     threshold_udf = udf(lambda: float(threshold), DoubleType())
-    if type_of_anomaly_to_find == 1:
+    if price_to_find:
         stats = input_df.select(
             mean(col(column_name)).alias("mean"),
             stddev(col(column_name)).alias("stddev")
@@ -65,7 +43,7 @@ def find_anomalies(
             .withColumn("is_anomaly", (abs(col("z_score")) > threshold).cast(BooleanType())) \
             .withWatermark("trade_ts", f"{window_size} seconds") \
             .filter(col("is_anomaly") == True)
-    elif type_of_anomaly_to_find == 2:
+    else:
         # Define a window specification for row-based computation
         window_spec = Window.orderBy("trade_ts")
 
@@ -92,19 +70,6 @@ def find_anomalies(
             .withColumn("price", col("price")) \
             .withColumn("volume", col("volume")) \
             .withWatermark("trade_ts", f"{window_size} seconds") \
-
-    elif type_of_anomaly_to_find == 3:
-        # Define UDF for Isolation Forest
-        isolation_forest_udf = udf(
-            lambda features: run_isolation_forest(features),
-            ArrayType(FloatType())  # Adjust return type based on your implementation
-        )
-
-        input_df = input_df.withColumn("isolation_forest_scores",
-                                       isolation_forest_udf(col(column_name))) \
-            .withColumn("is_anomaly", col("isolation_forest_scores")[1] > threshold) \
-            .filter(col("is_anomaly") == True)
-
 
     output_df = input_df \
         .withColumn("anomaly_uuid", make_uuid()) \
