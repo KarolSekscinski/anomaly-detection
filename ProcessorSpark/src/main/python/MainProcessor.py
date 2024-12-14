@@ -51,7 +51,6 @@ class MainProcessor:
                                            "org.apache.spark:spark-avro_2.12:3.2.0,"
                                            "com.datastax.oss:java-driver-core:4.13.0") \
             .getOrCreate()
-        print(dir(spark))
 
         # Read Avro schema and Kafka stream
         json_format_schema = open(settings_for_spark.schemas["trades"], "r").read()
