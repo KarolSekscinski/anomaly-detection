@@ -10,7 +10,7 @@ datasources:
     url: cassandra:9042
     access: proxy
     orgId: 1
-    uid: apachecassandra
+    uid: bbbb4866-0a6a-4ea7-9d6e-3e94cf89f443
     jsonData:
       consistency: ONE
       keyspace: market

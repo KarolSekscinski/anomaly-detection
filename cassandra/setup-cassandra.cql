@@ -14,21 +14,22 @@ CREATE TABLE stocks(
     volume double,
     type text,
     PRIMARY KEY ( (symbol), trade_ts )
-);
+)
+WITH CLUSTERING ORDER BY (trade_ts desc);
 
 CREATE INDEX IF NOT EXISTS ON stocks (uuid);
 
 CREATE TABLE anomalies(
     uuid uuid,
-    anomaly_uuid uuid,
     price double,
+    trade_ts timestamp,
     volume double,
-    anomaly_source text,
+    symbol text,
     window_size int,
     threshold double,
-    trade_ts timestamp,
     ingestion_ts timestamp,
     PRIMARY KEY ( (uuid), ingestion_ts )
 );
 
-CREATE INDEX IF NOT EXISTS ON anomalies (anomaly_source);
+CREATE INDEX IF NOT EXISTS ON anomalies (uuid);
+
