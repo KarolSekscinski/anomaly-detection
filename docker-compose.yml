@@ -15,6 +15,7 @@ services:
     depends_on:
       kafka-broker-init:
         condition: service_completed_successfully
+    restart: always
     networks:
       - pipeline
 
@@ -93,46 +94,133 @@ services:
     networks:
       - pipeline
 
-  kedro-pipeline:
-    container_name: kedro-pipeline
+  main-processor:
+    container_name: main-processor
+    hostname: main-processor
     build:
-      context: ./detect-anomalies
+      context: ProcessorSpark
       dockerfile: Dockerfile
-    environment:
-      KAFKA_SERVER: kafka-broker
-      KAFKA_PORT: "9092"
     ports:
-      - "8888:8888"
+      - "8002:8002"
+      - "4040:4040"
+    environment:
+      SPARK_PUBLIC_DNS: localhost
     depends_on:
-      kafka-broker-init:
-        condition: service_completed_successfully
+      - spark-master
+      - spark-worker-1
+      - spark-worker-2
+      - cassandra-db
+      - cassandra-db-init
+#    restart: always
     networks:
       - pipeline
 
 
-#  postgres-db-init:
+  spark-master:
+    container_name: spark-master
+    hostname: spark-master
+    build:
+      context: ProcessorSpark/spark
+      dockerfile: Dockerfile.spark-master
+    environment:
+      INIT_DAEMON_SETUP: setup_spark
+      SPARK_PUBLIC_DNS: localhost
+    ports:
+      - "9090:8080"
+      - "7077:7077"
+    networks:
+      - pipeline
 
-#  postgres-db:
 
-#  grafana:
-#    build:
-#      context: ./grafana
-#      dockerfile: Dockerfile
-#    container_name: grafana
-#    ports:
-#      - "3000:3000"
-#    restart: unless-stopped
-#    depends_on:
-#      - postgres-db
-#      - kedro-pipeline
-#    environment:
-#      - GF_INSTALL_PLUGINS=hadesarchitect-cassandra-datasource
-#      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/dashboard.json
-#      - GF_AUTH_ANONYMOUS_ENABLED=true
-#    #      - GF_SECURITY_ADMIN_USER=admin
-#    #      - GF_SECURITY_ADMIN_PASSWORD=admin
-#    networks:
-#      - pipeline
+  spark-worker-1:
+    container_name: spark-worker-1
+    hostname: spark-worker-1
+    build:
+      context: ProcessorSpark/spark
+      dockerfile: Dockerfile.spark-worker
+    depends_on:
+      - spark-master
+    ports:
+      - "8081:8081"
+    environment:
+      - "SPARK_MASTER=spark://spark-master:7077"
+      - SPARK_PUBLIC_DNS=localhost
+    networks:
+      - pipeline
+
+  spark-worker-2:
+    container_name: spark-worker-2
+    hostname: spark-worker-2
+    build:
+      context: ProcessorSpark/spark
+      dockerfile: Dockerfile.spark-worker
+    depends_on:
+      - spark-master
+    ports:
+      - "8082:8081"
+    environment:
+      - "SPARK_MASTER=spark://spark-master:7077"
+      - SPARK_PUBLIC_DNS=localhost
+    networks:
+      - pipeline
+
+  cassandra-db-init:
+    image: cassandra:4.1.5
+    container_name: cassandra-init
+    depends_on:
+      cassandra-db:
+        condition: service_healthy
+    volumes:
+      - ./cassandra/setup-cassandra.cql:/setup-cassandra.cql
+    networks:
+      - pipeline
+    command: [ '/bin/bash', '-c', 'echo loading cassandra keyspace && cqlsh cassandra -u cassandra -p cassandra -f /setup-cassandra.cql' ]
+
+
+  cassandra-db:
+    image: cassandra:4.1.5
+    container_name: cassandra
+    hostname: cassandra
+    ports:
+      - "9042:9042"
+    environment: &environment
+      MAX_HEAP_SIZE: 256M
+      HEAP_NEWSIZE: 128M
+      CASSANDRA_USERNAME: cassandra
+      CASSANDRA_PASSWORD: cassandra
+      CASSANDRA_CLUSTER_NAME: CassandraCluster
+      CASSANDRA_NUM_TOKENS: 128
+      CASSANDRA_DATACENTER: DataCenter1
+      CASSANDRA_RACK: Rack1
+      CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+    healthcheck:
+      test: ["CMD", "cqlsh",  "-u cassandra", "-p cassandra", "-e DESCRIBE KEYSPACES;"]
+      interval: 15s
+      timeout: 10s
+      retries: 8
+    networks:
+      - pipeline
+
+
+  grafana:
+    build:
+      context: ./grafana
+      dockerfile: Dockerfile
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    depends_on:
+      - cassandra-db
+      - main-processor
+    environment:
+      - GF_INSTALL_PLUGINS=hadesarchitect-cassandra-datasource
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/dashboard.json
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      - pipeline
 
 networks:
   pipeline:
