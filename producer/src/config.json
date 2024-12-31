@@ -1,7 +1,6 @@
 {
   "KAFKA_SERVER": "kafka-broker:29092",
   "KAFKA_TOPIC": "stocks",
-  "FINNHUB_API_TOKEN": "cpa5qphr01qid796bnogcpa5qphr01qid796bnp0",
   "FINNHUB_STOCKS_TICKERS": ["BINANCE:BTCUSDT"],
   "FINNHUB_VALIDATE_TICKERS": 1
 }
