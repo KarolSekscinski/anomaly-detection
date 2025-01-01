@@ -1,17 +1,19 @@
 import websocket
 from utils.producer_functions import *
+import os
+from dotenv import load_dotenv
 
 
 class Producer:
     def __init__(self):
         self.config = load_config('config.json')
-        self.client = load_client(self.config['FINNHUB_API_TOKEN'])
+        self.client = load_client(os.getenv("FINNHUB_API_TOKEN"))
         self.kafka_producer = load_kafka_producer(self.config['KAFKA_SERVER'])
         self.avro_schema = load_avro_schema('schemas/trades.avsc')
         self.validate = self.config['FINNHUB_VALIDATE_TICKERS']
 
         websocket.enableTrace(True)
-        self.ws = websocket.WebSocketApp(f"wss://ws.finnhub.io?token={self.config['FINNHUB_API_TOKEN']}",
+        self.ws = websocket.WebSocketApp(f"wss://ws.finnhub.io?token={os.getenv('FINNHUB_API_TOKEN')}",
                                          on_message=self.on_message,
                                          on_error=self.on_error,
                                          on_close=self.on_close)
@@ -47,4 +49,5 @@ class Producer:
 
 
 if __name__ == "__main__":
+    load_dotenv()
     Producer()

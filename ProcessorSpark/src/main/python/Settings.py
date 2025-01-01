@@ -15,7 +15,8 @@ class Settings:
             "password": self.config.get('cassandra', 'password'),
             "tables": {
                 "trades": self.config.get('cassandra.tables', 'trades'),
-                "anomalies": self.config.get('cassandra.tables', 'anomalies')
+                "price": self.config.get('cassandra.tables', 'price_anomalies'),
+                "volume": self.config.get('cassandra.tables', 'volume_anomalies')
             }
 
         }
@@ -62,16 +63,3 @@ class Settings:
             "trades": self.config.get('schemas', 'trades')
         }
 
-        self.anomalies = {
-            "window_sizes": {
-                "prices": ast.literal_eval(self.config.get('anomalies.window_size', 'prices')),
-                "volumes": ast.literal_eval(self.config.get('anomalies.window_size', 'volumes'))
-
-            },
-            "thresholds": {
-                "z-threshold": self.config.get('anomalies.thresholds', 'z-threshold'),
-                "pv-threshold": self.config.get('anomalies.thresholds', 'pv-threshold')
-            },
-            #"contamination_factors": ast.literal_eval(self.config.get('anomalies.contamination_factors',
-                                                                      # 'contamination_factors'))
-        }

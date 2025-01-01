@@ -153,7 +153,7 @@
           "queryType": "query",
           "rawQuery": true,
           "refId": "A",
-          "target": "SELECT symbol, price, ingestion_ts\nFROM stocks\nWHERE symbol = 'BINANCE:BTCUSDT' \n  AND ingestion_ts >= $__timeFrom \n  AND ingestion_ts <= $__timeTo ALLOW FILTERING;"
+          "target": "SELECT symbol, price, ingestion_ts\nFROM stocks\nWHERE symbol = 'BINANCE:BTCUSDT' \n  AND ingestion_ts >= $__timeFrom \n  AND ingestion_ts <= $__timeTo;"
         },
         {
           "datasource": {
@@ -165,7 +165,7 @@
           "queryType": "query",
           "rawQuery": true,
           "refId": "B",
-          "target": "SELECT symbol, price, ingestion_ts from anomalies WHERE symbol = 'BINANCE:BTCUSDT' \n  AND ingestion_ts >= $__timeFrom \n  AND ingestion_ts <= $__timeTo ALLOW FILTERING;"
+          "target": "SELECT symbol, price, ingestion_ts from price_anomalies WHERE symbol = 'BINANCE:BTCUSDT' \n  AND ingestion_ts >= $__timeFrom \n  AND ingestion_ts <= $__timeTo;"
         }
       ],
       "title": "Price Anomalies",
@@ -303,7 +303,7 @@
           "queryType": "query",
           "rawQuery": true,
           "refId": "A",
-          "target": "SELECT symbol, volume, ingestion_ts\nFROM stocks\nWHERE symbol = 'BINANCE:BTCUSDT' \n  AND ingestion_ts >= $__timeFrom \n  AND ingestion_ts <= $__timeTo ALLOW FILTERING;"
+          "target": "SELECT symbol, volume, ingestion_ts\nFROM stocks\nWHERE symbol = 'BINANCE:BTCUSDT' \n  AND ingestion_ts >= $__timeFrom \n  AND ingestion_ts <= $__timeTo;"
         },
         {
           "datasource": {
@@ -315,7 +315,7 @@
           "queryType": "query",
           "rawQuery": true,
           "refId": "B",
-          "target": "SELECT symbol, volume, ingestion_ts from anomalies WHERE symbol = 'BINANCE:BTCUSDT' \n  AND ingestion_ts >= $__timeFrom \n  AND ingestion_ts <= $__timeTo ALLOW FILTERING;"
+          "target": "SELECT symbol, volume, ingestion_ts from volume_anomalies WHERE symbol = 'BINANCE:BTCUSDT' \n  AND ingestion_ts >= $__timeFrom \n  AND ingestion_ts <= $__timeTo;"
         }
       ],
       "title": "Volume Anomalies",
@@ -436,7 +436,7 @@
           "queryType": "query",
           "rawQuery": true,
           "refId": "A",
-          "target": "select symbol, price, trade_ts from stocks where symbol = 'BINANCE:BTCUSDT' and trade_ts>$__timeFrom and trade_ts<$__timeTo;"
+          "target": "select symbol, price, ingestion_ts from stocks where symbol = 'BINANCE:BTCUSDT' and ingestion_ts>$__timeFrom and ingestion_ts<$__timeTo;"
         }
       ],
       "title": "Price",
@@ -529,7 +529,7 @@
           "queryType": "query",
           "rawQuery": true,
           "refId": "A",
-          "target": "select symbol, volume, trade_ts from stocks where symbol = 'BINANCE:BTCUSDT' and trade_ts>$__timeFrom and trade_ts<$__timeTo;"
+          "target": "select symbol, volume, ingestion_ts from stocks where symbol = 'BINANCE:BTCUSDT' and ingestion_ts>$__timeFrom and ingestion_ts<$__timeTo;"
         }
       ],
       "title": "Volume",
