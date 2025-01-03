@@ -14,26 +14,19 @@ class StreamData:
     @staticmethod
     def main():
         # Write to Cassandra functions
-        def write_to_cassandra(batch_df, batch_id, cassandra_settings):
-            batch_df.write \
-                .format("org.apache.spark.sql.cassandra") \
-                .options(
-                    table=cassandra_settings["tables"]["trades"],
-                    keyspace=cassandra_settings["keyspace"]
-                ) \
-                .mode("append") \
-                .save()
-
-        def write_anomalies(batch_df, batch_id, cassandra_settings, anomaly_type):
-            table = cassandra_settings["tables"][anomaly_type]
-            batch_df.write \
-                .format("org.apache.spark.sql.cassandra") \
-                .options(
-                    table=table,
-                    keyspace=cassandra_settings["keyspace"]
-                ) \
-                .mode("append") \
-                .save()
+        def write_to_cassandra(batch_df, batch_id, cassandra_settings, table_name):
+            row_size = batch_df.count()
+            if row_size > 0:
+                # Add the batch_size column
+                batch_df = batch_df.withColumn("batch_size", lit(row_size))
+                batch_df.write \
+                    .format("org.apache.spark.sql.cassandra") \
+                    .options(
+                        table=table_name,
+                        keyspace=cassandra_settings["keyspace"]
+                    ) \
+                    .mode("append") \
+                    .save()
 
         # Main function
         settings = Settings()
@@ -81,50 +74,42 @@ class StreamData:
             .withColumn("trade_ts", (col("trade_ts") / 1000).cast("timestamp")) \
             .withColumn("ingestion_ts", lit(current_timestamp()))
 
-        # Add anomaly detection columns directly in the main stream
+
         enriched_df = (final_df
-                       .withColumn("price_z_score", z_score_anomalies(col("price")))
-                       # .withColumn("price_iqr_score", iqr_anomalies(col("price")))
-                       # .withColumn("price_arima_score", arima_anomalies(col("price")))
-                       # .withColumn("price_iforest_score", iforest_anomalies(col("price")))
-                       .withColumn("price_is_anomaly", col("price_z_score"))
-                       .withColumn("volume_z_score", z_score_anomalies(col("volume")))
-                       # .withColumn("volume_iqr_score", iqr_anomalies(col("volume")))
-                       # .withColumn("volume_iforest_score", iforest_anomalies(col("volume")))
-                       .withColumn("volume_is_anomaly", col("volume_z_score"))
-                       .withColumn("detection_ts", current_timestamp())
-                       )
+                       .withColumn("price_z_score", arima_anomalies(col("price")))
+                       .withColumn("volume_z_score", arima_anomalies(col("volume")))
+                       ).repartition(100)
 
-        # Split data for base and anomaly-specific processing
         base_data = enriched_df.select("uuid", "symbol", "price", "volume", "trade_ts", "ingestion_ts")
-
-        price_anomalies = enriched_df \
-            .filter(col("price_is_anomaly")) \
-            .select("uuid", "symbol", "price", "trade_ts", "ingestion_ts", "detection_ts")
-
-        volume_anomalies = enriched_df \
-            .filter(col("volume_is_anomaly")) \
-            .select("uuid", "symbol", "volume", "trade_ts", "ingestion_ts", "detection_ts")
 
         # Write base data to Cassandra
         unified_query = base_data.writeStream \
-            .trigger(processingTime="6 seconds") \
-            .foreachBatch(lambda batch_df, batch_id: write_to_cassandra(batch_df, batch_id, settings.cassandra)) \
-            .outputMode("update") \
+            .foreachBatch(lambda batch_df, batch_id:
+                          write_to_cassandra(batch_df, batch_id, settings.cassandra,
+                                             settings.cassandra["tables"]["trades"])) \
+            .outputMode("append") \
             .start()
 
-        # Write price anomalies to Cassandra
-        price_anomalies.writeStream \
-            .trigger(processingTime="6 seconds") \
-            .foreachBatch(lambda batch_df, batch_id: write_anomalies(batch_df, batch_id, settings.cassandra, "price")) \
-            .outputMode("update") \
+        price_anomalies = enriched_df \
+            .filter(col("price_z_score") == True) \
+            .select("uuid", "symbol", "price", "trade_ts", "ingestion_ts")
+
+        price_query = price_anomalies.writeStream \
+            .foreachBatch(lambda batch_df, batch_id:
+                          write_to_cassandra(batch_df, batch_id, settings.cassandra,
+                                             settings.cassandra["tables"]["price"])) \
+            .outputMode("append") \
             .start()
 
-        # Write volume anomalies to Cassandra
-        volume_anomalies.writeStream \
-            .trigger(processingTime="6 seconds") \
-            .foreachBatch(lambda batch_df, batch_id: write_anomalies(batch_df, batch_id, settings.cassandra, "volume")) \
-            .outputMode("update") \
+        volume_anomalies = enriched_df \
+            .filter(col("volume_z_score") == True) \
+            .select("uuid", "symbol", "volume", "trade_ts", "ingestion_ts")
+
+        volume_query = volume_anomalies.writeStream \
+            .foreachBatch(lambda batch_df, batch_id:
+                          write_to_cassandra(batch_df, batch_id, settings.cassandra,
+                                             settings.cassandra["tables"]["volume"])) \
+            .outputMode("append") \
             .start()
 
         spark_context.streams.awaitAnyTermination()

@@ -2,7 +2,7 @@ version: '3.8'
 
 x-spark-common: &spark-common
   build:
-    context: ./spark
+    context: spark
     dockerfile: Dockerfile
   command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
   depends_on:
@@ -126,7 +126,13 @@ services:
       - spark-worker-2
       - cassandra-db
       - cassandra-db-init
-#    restart: always
+    healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:8002/health"]  # Assuming the container exposes a health endpoint
+        interval: 30s  # Check every 30 seconds
+        retries: 3  # Retry up to 3 times before considering it unhealthy
+        start_period: 5s  # Delay before starting health checks
+        timeout: 5s  # Timeout for the health check command
+    restart: always
     networks:
       - pipeline
 

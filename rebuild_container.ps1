@@ -5,7 +5,7 @@ param (
 
 function Restart-Main-Processor {
     Write-Host "Rebuilding Main Processor service..." -ForegroundColor Cyan
-    docker-compose build --no-cache main-processor
+    docker-compose build main-processor
     docker-compose up -d main-processor
     if ($LASTEXITCODE -eq 0) {
         Write-Host "Build successful!" -ForegroundColor Green

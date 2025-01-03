@@ -51,11 +51,6 @@ class Settings:
                 {
                     "StreamProcessor": self.config.get('spark.shuffle_partitions', 'StreamProcessor')
                 }
-            ],
-            "deprecated_offsets": [
-                {
-                    "StreamProcessor": self.config.get('spark.deprecated_offsets', 'StreamProcessor')
-                }
             ]
         }
 

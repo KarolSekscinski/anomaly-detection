@@ -18,13 +18,6 @@
 
   <dependencies>
     <!-- https://mvnrepository.com/artifact/org.apache.spark/spark-sql-kafka-0-10 -->
-<!--    <dependency>-->
-<!--        <groupId>org.apache.spark</groupId>-->
-<!--        <artifactId>spark-sql-kafka-0-10_2.12</artifactId>-->
-<!--        <version>3.2.0</version>-->
-<!--        <scope>test</scope>-->
-<!--    </dependency>-->
-    <!-- https://mvnrepository.com/artifact/org.apache.spark/spark-sql-kafka-0-10 -->
     <dependency>
         <groupId>org.apache.spark</groupId>
         <artifactId>spark-sql-kafka-0-10_2.13</artifactId>
@@ -32,15 +25,7 @@
         <scope>test</scope>
     </dependency>
 
-
-
-    <!-- https://mvnrepository.com/artifact/org.apache.spark/spark-avro -->
-<!--    <dependency>-->
-<!--        <groupId>org.apache.spark</groupId>-->
-<!--        <artifactId>spark-avro_2.12</artifactId>-->
-<!--        <version>3.2.0</version>-->
-<!--    </dependency>-->
-<!--       https://mvnrepository.com/artifact/org.apache.spark/spark-avro -->
+    <!--       https://mvnrepository.com/artifact/org.apache.spark/spark-avro -->
     <dependency>
         <groupId>org.apache.spark</groupId>
         <artifactId>spark-avro_2.12</artifactId>
@@ -48,19 +33,13 @@
     </dependency>
 
 
-<!--     https://mvnrepository.com/artifact/com.datastax.spark/spark-cassandra-connector-->
-      <dependency>
-          <groupId>com.datastax.spark</groupId>
-          <artifactId>spark-cassandra-connector_2.12</artifactId>
-          <version>3.5.0</version>
-      </dependency>
+    <!--     https://mvnrepository.com/artifact/com.datastax.spark/spark-cassandra-connector-->
+    <dependency>
+      <groupId>com.datastax.spark</groupId>
+      <artifactId>spark-cassandra-connector_2.12</artifactId>
+      <version>3.5.0</version>
+    </dependency>
 
-      <!-- https://mvnrepository.com/artifact/com.datastax.spark/spark-cassandra-connector -->
-<!--    <dependency>-->
-<!--        <groupId>com.datastax.spark</groupId>-->
-<!--        <artifactId>spark-cassandra-connector_2.12</artifactId>-->
-<!--        <version>3.2.0</version>-->
-<!--    </dependency>-->
 
     <!-- https://mvnrepository.com/artifact/com.datastax.oss/java-driver-core -->
     <dependency>
@@ -68,15 +47,6 @@
         <artifactId>java-driver-core</artifactId>
         <version>4.13.0</version>
     </dependency>
-
-    <!--https://repo.maven.apache.org/maven2/com/linkedin/isolation-forest/-->
-<!--    <dependency>-->
-<!--        <groupId>com.linkedin.isolation-forest</groupId>-->
-<!--        <artifactId>isolation-forest_3.2.0_2.11</artifactId>-->
-<!--        <version>3.0.2</version>-->
-<!--    </dependency>-->
-
-
   </dependencies>
     <build>
         <plugins>

@@ -6,13 +6,12 @@ USE market;
 
 CREATE TABLE stocks(
     uuid uuid,
-    trade_conditions text,
     price double,
     symbol text,
     trade_ts timestamp,
     ingestion_ts timestamp,
     volume double,
-    type text,
+    batch_size int,
     PRIMARY KEY ( (symbol), ingestion_ts )
 )
 WITH CLUSTERING ORDER BY (ingestion_ts desc);
@@ -25,7 +24,7 @@ CREATE TABLE price_anomalies(
     trade_ts timestamp,
     symbol text,
     ingestion_ts timestamp,
-    detection_ts timestamp,
+    batch_size int,
     PRIMARY KEY ( (symbol), ingestion_ts )
 )
 WITH CLUSTERING ORDER BY (ingestion_ts desc);
@@ -37,7 +36,7 @@ CREATE TABLE volume_anomalies(
     trade_ts timestamp,
     symbol text,
     ingestion_ts timestamp,
-    detection_ts timestamp,
+    batch_size int,
     PRIMARY KEY ( (symbol), ingestion_ts )
 )
 WITH CLUSTERING ORDER BY (ingestion_ts desc);
