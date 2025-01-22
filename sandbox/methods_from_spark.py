@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.ensemble import IsolationForest
 from statsmodels.tsa.arima.model import ARIMA
+import warnings
 
 
 def z_score_anomalies(column: pd.Series) -> pd.Series:
@@ -32,8 +33,10 @@ def arima_anomalies(column: pd.Series) -> pd.Series:
     Fits an ARIMA model and flags residuals exceeding a threshold.
     """
     try:
-        model = ARIMA(column, order=(1, 1, 1))
-        model_fit = model.fit()
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore")
+            model = ARIMA(column, order=(1, 1, 1))
+            model_fit = model.fit()
         forecast = model_fit.fittedvalues
         residuals = column - forecast
         threshold = 3 * residuals.std()  # Anomalies if residuals exceed 3 std deviations

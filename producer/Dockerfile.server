@@ -1,0 +1,11 @@
+FROM python:3.11
+
+WORKDIR /app
+
+COPY requirements_fake.txt .
+
+RUN pip install -r requirements_fake.txt
+
+COPY src/ .
+
+CMD ["python", "ProducerFake.py"]

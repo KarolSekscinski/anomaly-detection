@@ -78,7 +78,7 @@ class StreamData:
         enriched_df = (final_df
                        .withColumn("price_z_score", arima_anomalies(col("price")))
                        .withColumn("volume_z_score", arima_anomalies(col("volume")))
-                       ).repartition(100)
+                       ).repartition(20)
 
         base_data = enriched_df.select("uuid", "symbol", "price", "volume", "trade_ts", "ingestion_ts")
 
@@ -87,7 +87,7 @@ class StreamData:
             .foreachBatch(lambda batch_df, batch_id:
                           write_to_cassandra(batch_df, batch_id, settings.cassandra,
                                              settings.cassandra["tables"]["trades"])) \
-            .outputMode("append") \
+            .outputMode("update") \
             .start()
 
         price_anomalies = enriched_df \
@@ -98,7 +98,7 @@ class StreamData:
             .foreachBatch(lambda batch_df, batch_id:
                           write_to_cassandra(batch_df, batch_id, settings.cassandra,
                                              settings.cassandra["tables"]["price"])) \
-            .outputMode("append") \
+            .outputMode("update") \
             .start()
 
         volume_anomalies = enriched_df \
@@ -109,7 +109,7 @@ class StreamData:
             .foreachBatch(lambda batch_df, batch_id:
                           write_to_cassandra(batch_df, batch_id, settings.cassandra,
                                              settings.cassandra["tables"]["volume"])) \
-            .outputMode("append") \
+            .outputMode("update") \
             .start()
 
         spark_context.streams.awaitAnyTermination()

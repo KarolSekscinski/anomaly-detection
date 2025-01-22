@@ -146,7 +146,6 @@ services:
     command: bin/spark-class org.apache.spark.deploy.master.Master
     volumes:
       - ./spark/requirements.txt:/requirements.txt
-      - ./jobs:/jobs
     ports:
       - "9090:8080"
       - "7077:7077"

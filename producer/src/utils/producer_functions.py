@@ -4,6 +4,7 @@ import avro.io
 import finnhub
 from kafka import KafkaProducer
 import io
+import time
 
 
 def load_config(config_file):
@@ -50,3 +51,30 @@ def ticker_validator(finnhub_client, ticker):
         if symbol['symbol'] == ticker:
             return True
     return False
+
+
+# Functions for fake data stream
+def format_trade_message(trade, message_type="trade"):
+    """
+    Formats a trade message to match the Avro schema.
+
+    Parameters:
+    - trade (dict): The trade data (price, symbol, timestamp, volume).
+    - message_type (str): The type of message (default is "trade").
+
+    Returns:
+    - dict: The formatted trade message.
+    """
+    formatted_trade = {
+        "data": [
+            {
+                "c": None,
+                "p": trade["p"],
+                "s": trade["s"],
+                "t": int(time.time() * 1000),
+                "v": trade["v"],
+            }
+        ],
+        "type": message_type,
+    }
+    return formatted_trade
