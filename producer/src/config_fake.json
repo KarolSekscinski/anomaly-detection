@@ -1,0 +1,14 @@
+{
+  "KAFKA_SERVER": "kafka-broker:29092",
+  "KAFKA_TOPIC": "stocks",
+  "WEBSOCKET_SERVER": {
+    "HOST": "0.0.0.0",
+    "PORT":9001
+  },
+  "DATASET_PATH": ["data/finnhub_anomalies.csv"],
+  "COLUMN_NAMES": {
+    "price": "p",
+    "symbol": "s",
+    "volume": "v"
+  }
+}

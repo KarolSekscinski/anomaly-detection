@@ -47,7 +47,7 @@
           "custom": {
             "axisCenteredZero": false,
             "axisColorMode": "text",
-            "axisLabel": "Prize",
+            "axisLabel": "Price",
             "axisPlacement": "auto",
             "barAlignment": 0,
             "drawStyle": "line",
@@ -111,10 +111,6 @@
               {
                 "id": "custom.showPoints",
                 "value": "always"
-              },
-              {
-                "id": "custom.axisPlacement",
-                "value": "hidden"
               },
               {
                 "id": "displayName",
@@ -153,7 +149,7 @@
           "queryType": "query",
           "rawQuery": true,
           "refId": "A",
-          "target": "SELECT symbol, price, ingestion_ts\nFROM stocks\nWHERE symbol = 'BINANCE:BTCUSDT' \n  AND ingestion_ts >= $__timeFrom \n  AND ingestion_ts <= $__timeTo ALLOW FILTERING;"
+          "target": "SELECT symbol, price, ingestion_ts\nFROM stocks\nWHERE symbol = 'BINANCE:BTCUSDT' \n  AND ingestion_ts >= $__timeFrom \n  AND ingestion_ts <= $__timeTo;"
         },
         {
           "datasource": {
@@ -165,23 +161,10 @@
           "queryType": "query",
           "rawQuery": true,
           "refId": "B",
-          "target": "SELECT symbol, price, ingestion_ts from anomalies WHERE symbol = 'BINANCE:BTCUSDT' \n  AND ingestion_ts >= $__timeFrom \n  AND ingestion_ts <= $__timeTo ALLOW FILTERING;"
+          "target": "SELECT symbol, price, ingestion_ts from price_anomalies WHERE symbol = 'BINANCE:BTCUSDT' \n  AND ingestion_ts >= $__timeFrom \n  AND ingestion_ts <= $__timeTo;"
         }
       ],
       "title": "Price Anomalies",
-      "transformations": [
-        {
-          "id": "filterFieldsByName",
-          "options": {
-            "include": {
-              "names": [
-                "ingestion_ts",
-                "price"
-              ]
-            }
-          }
-        }
-      ],
       "type": "timeseries"
     },
     {
@@ -192,7 +175,8 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
+            "fixedColor": "dark-red",
+            "mode": "fixed"
           },
           "custom": {
             "axisCenteredZero": false,
@@ -212,12 +196,12 @@
             "lineStyle": {
               "fill": "solid"
             },
-            "lineWidth": 1,
-            "pointSize": 4,
+            "lineWidth": 0,
+            "pointSize": 5,
             "scaleDistribution": {
               "type": "linear"
             },
-            "showPoints": "auto",
+            "showPoints": "always",
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -247,25 +231,9 @@
           {
             "matcher": {
               "id": "byFrameRefID",
-              "options": "B"
+              "options": "A"
             },
             "properties": [
-              {
-                "id": "custom.pointSize",
-                "value": 7
-              },
-              {
-                "id": "custom.lineWidth",
-                "value": 0
-              },
-              {
-                "id": "custom.showPoints",
-                "value": "always"
-              },
-              {
-                "id": "custom.axisPlacement",
-                "value": "hidden"
-              },
               {
                 "id": "displayName",
                 "value": "Volume Anomaly"
@@ -303,35 +271,10 @@
           "queryType": "query",
           "rawQuery": true,
           "refId": "A",
-          "target": "SELECT symbol, volume, ingestion_ts\nFROM stocks\nWHERE symbol = 'BINANCE:BTCUSDT' \n  AND ingestion_ts >= $__timeFrom \n  AND ingestion_ts <= $__timeTo ALLOW FILTERING;"
-        },
-        {
-          "datasource": {
-            "type": "hadesarchitect-cassandra-datasource",
-            "uid": "bbbb4866-0a6a-4ea7-9d6e-3e94cf89f443"
-          },
-          "datasourceId": 1,
-          "hide": false,
-          "queryType": "query",
-          "rawQuery": true,
-          "refId": "B",
-          "target": "SELECT symbol, volume, ingestion_ts from anomalies WHERE symbol = 'BINANCE:BTCUSDT' \n  AND ingestion_ts >= $__timeFrom \n  AND ingestion_ts <= $__timeTo ALLOW FILTERING;"
+          "target": "SELECT symbol, volume, ingestion_ts\nFROM volume_anomalies\nWHERE symbol = 'BINANCE:BTCUSDT' \n  AND ingestion_ts >= $__timeFrom \n  AND ingestion_ts <= $__timeTo;"
         }
       ],
       "title": "Volume Anomalies",
-      "transformations": [
-        {
-          "id": "filterFieldsByName",
-          "options": {
-            "include": {
-              "names": [
-                "ingestion_ts",
-                "volume"
-              ]
-            }
-          }
-        }
-      ],
       "type": "timeseries"
     },
     {
@@ -436,7 +379,7 @@
           "queryType": "query",
           "rawQuery": true,
           "refId": "A",
-          "target": "select symbol, price, trade_ts from stocks where symbol = 'BINANCE:BTCUSDT' and trade_ts>$__timeFrom and trade_ts<$__timeTo;"
+          "target": "select symbol, price, ingestion_ts from stocks where symbol = 'BINANCE:BTCUSDT' and ingestion_ts>$__timeFrom and ingestion_ts<$__timeTo;"
         }
       ],
       "title": "Price",
@@ -529,7 +472,7 @@
           "queryType": "query",
           "rawQuery": true,
           "refId": "A",
-          "target": "select symbol, volume, trade_ts from stocks where symbol = 'BINANCE:BTCUSDT' and trade_ts>$__timeFrom and trade_ts<$__timeTo;"
+          "target": "select symbol, volume, ingestion_ts from stocks where symbol = 'BINANCE:BTCUSDT' and ingestion_ts>$__timeFrom and ingestion_ts<$__timeTo;"
         }
       ],
       "title": "Volume",

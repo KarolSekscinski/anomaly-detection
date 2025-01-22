@@ -6,30 +6,39 @@ USE market;
 
 CREATE TABLE stocks(
     uuid uuid,
-    trade_conditions text,
     price double,
     symbol text,
     trade_ts timestamp,
     ingestion_ts timestamp,
     volume double,
-    type text,
-    PRIMARY KEY ( (symbol), trade_ts )
+    batch_size int,
+    PRIMARY KEY ( (symbol), ingestion_ts )
 )
-WITH CLUSTERING ORDER BY (trade_ts desc);
+WITH CLUSTERING ORDER BY (ingestion_ts desc);
 
 CREATE INDEX IF NOT EXISTS ON stocks (uuid);
 
-CREATE TABLE anomalies(
+CREATE TABLE price_anomalies(
     uuid uuid,
     price double,
     trade_ts timestamp,
-    volume double,
     symbol text,
-    window_size int,
-    threshold double,
     ingestion_ts timestamp,
-    PRIMARY KEY ( (uuid), ingestion_ts )
-);
+    batch_size int,
+    PRIMARY KEY ( (symbol), ingestion_ts )
+)
+WITH CLUSTERING ORDER BY (ingestion_ts desc);
+CREATE INDEX IF NOT EXISTS ON price_anomalies (symbol);
 
-CREATE INDEX IF NOT EXISTS ON anomalies (uuid);
+CREATE TABLE volume_anomalies(
+    uuid uuid,
+    volume double,
+    trade_ts timestamp,
+    symbol text,
+    ingestion_ts timestamp,
+    batch_size int,
+    PRIMARY KEY ( (symbol), ingestion_ts )
+)
+WITH CLUSTERING ORDER BY (ingestion_ts desc);
+CREATE INDEX IF NOT EXISTS ON volume_anomalies (symbol);
 

@@ -1,5 +1,20 @@
 version: '3.8'
 
+x-spark-common: &spark-common
+  build:
+    context: spark
+    dockerfile: Dockerfile
+  command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+  depends_on:
+    - spark-master
+  environment:
+    SPARK_MODE: worker
+    SPARK_WORKER_CORES: 2
+    SPARK_WORKER_MEMORY: 1g
+    SPARK_MASTER_URL: spark://spark-master:7077
+  networks:
+   - pipeline
+
 services:
   data-producer:
     container_name: data-producer
@@ -15,7 +30,7 @@ services:
     depends_on:
       kafka-broker-init:
         condition: service_completed_successfully
-    restart: always
+#    restart: always
     networks:
       - pipeline
 
@@ -111,7 +126,13 @@ services:
       - spark-worker-2
       - cassandra-db
       - cassandra-db-init
-#    restart: always
+    healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:8002/health"]  # Assuming the container exposes a health endpoint
+        interval: 30s  # Check every 30 seconds
+        retries: 3  # Retry up to 3 times before considering it unhealthy
+        start_period: 5s  # Delay before starting health checks
+        timeout: 5s  # Timeout for the health check command
+    restart: always
     networks:
       - pipeline
 
@@ -120,49 +141,30 @@ services:
     container_name: spark-master
     hostname: spark-master
     build:
-      context: ProcessorSpark/spark
-      dockerfile: Dockerfile.spark-master
-    environment:
-      INIT_DAEMON_SETUP: setup_spark
-      SPARK_PUBLIC_DNS: localhost
+      context: spark
+      dockerfile: Dockerfile
+    command: bin/spark-class org.apache.spark.deploy.master.Master
+    volumes:
+      - ./spark/requirements.txt:/requirements.txt
     ports:
       - "9090:8080"
       - "7077:7077"
     networks:
       - pipeline
 
-
   spark-worker-1:
-    container_name: spark-worker-1
-    hostname: spark-worker-1
-    build:
-      context: ProcessorSpark/spark
-      dockerfile: Dockerfile.spark-worker
-    depends_on:
-      - spark-master
-    ports:
-      - "8081:8081"
-    environment:
-      - "SPARK_MASTER=spark://spark-master:7077"
-      - SPARK_PUBLIC_DNS=localhost
-    networks:
-      - pipeline
+    <<: *spark-common
+    container_name: spark-w-1
+    hostname: spark-w-1
+    volumes:
+      - ./spark/requirements.txt:/requirements.txt
 
   spark-worker-2:
-    container_name: spark-worker-2
-    hostname: spark-worker-2
-    build:
-      context: ProcessorSpark/spark
-      dockerfile: Dockerfile.spark-worker
-    depends_on:
-      - spark-master
-    ports:
-      - "8082:8081"
-    environment:
-      - "SPARK_MASTER=spark://spark-master:7077"
-      - SPARK_PUBLIC_DNS=localhost
-    networks:
-      - pipeline
+    <<: *spark-common
+    container_name: spark-w-2
+    hostname: spark-w-2
+    volumes:
+      - ./spark/requirements.txt:/requirements.txt
 
   cassandra-db-init:
     image: cassandra:4.1.5
